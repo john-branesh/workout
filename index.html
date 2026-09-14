@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Workout Tracker</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="app-header">
+  <h1>Workout Tracker</h1>
+  <div id="today-date" class="today-date"></div>
+</header>
+
+<main id="app">
+
+  <!-- Screen 1: pick which split you're doing today -->
+  <section id="split-select-screen" class="screen">
+    <h2>What are you training today?</h2>
+    <div class="split-grid">
+      <button class="split-btn" data-split="Push">Push</button>
+      <button class="split-btn" data-split="Pull">Pull</button>
+      <button class="split-btn" data-split="Lower">Lower</button>
+      <button class="split-btn" data-split="Upper">Upper</button>
+    </div>
+  </section>
+
+  <!-- Screen 2: checklist of exercises + today's plan -->
+  <section id="workout-screen" class="screen hidden">
+    <button id="change-split-btn" class="link-btn">&larr; Change split</button>
+    <h2 id="workout-screen-title"></h2>
+
+    <div class="panel">
+      <h3>Pick your exercises</h3>
+      <ul id="exercise-checklist" class="checklist"></ul>
+
+      <div class="add-exercise-row">
+        <input type="text" id="new-exercise-input" placeholder="New exercise name">
+        <button id="add-exercise-btn">+ Add</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Today's plan</h3>
+      <ul id="today-plan" class="today-plan"></ul>
+      <p id="today-plan-empty" class="empty-hint">Check some exercises above to build today's plan.</p>
+    </div>
+  </section>
+
+  <!-- Screen 3: logging one exercise's sets -->
+  <section id="logger-screen" class="screen hidden">
+    <button id="logger-back-btn" class="link-btn">&larr; Back</button>
+    <h2 id="logger-exercise-name"></h2>
+    <p id="logger-last-time" class="last-time-hint"></p>
+
+    <ul id="set-list" class="set-list"></ul>
+
+    <button id="add-set-btn" class="secondary-btn">+ Add Set</button>
+    <button id="finish-exercise-btn" class="primary-btn">Done with this exercise</button>
+  </section>
+
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>
