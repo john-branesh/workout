@@ -43,11 +43,15 @@ node --check app.js
 
 **A session is keyed by (date, split), not just date.** `findOrCreateSession()` looks up/creates a session by that pair, so logging two different splits on the same date produces two separate sessions.
 
+**The session date is user-editable, not hardcoded to today.** `currentSessionDate` (set from the `#session-date-input` field, defaulting to today when a split is picked) is what actually gets used everywhere a session is looked up or saved — this is what lets you log or review a past day, not just today. Changing the split or the date both call `loadCheckedExercisesFromSession()`, which re-reads whatever's already saved for that exact (date, split) pair so previously-logged exercises correctly reappear as "Done" instead of looking empty just because the page reloaded.
+
 **Exercises save independently, not the whole session at once.** Marking an exercise "Done" (`finish-exercise-btn` handler) immediately writes that one exercise into its session and calls `saveData()`. There's no separate "finish workout" step — this is intentional, so a mid-workout interruption doesn't lose earlier sets. Reopening an already-saved exercise from "today's plan" pre-fills the logger from storage and overwrites on save, which is how editing works.
+
+**Deleting an exercise entry** (`deleteExercise()`) removes it from its session's `exercises` array, and drops the whole session if that was the last exercise in it. It uses the browser's native `confirm()` dialog to ask "are you sure" — fine for a real user tapping the button, but be aware `confirm()` blocks the page entirely, including automated browser-testing tools (clicking through it via CDP will hang/timeout). When testing this in an automated browser session, verify the logic by reading the code rather than clicking the delete button.
 
 **Reps default to 10.** Sets are stored as `{ weight, reps }`; a set is assumed to be a completed default-rep set unless a lower rep count is explicitly entered (matching how the user tracks failed reps by hand, e.g. `15(6)` meaning failed at 6). `formatSets()` renders sets back into that same shorthand. `DEFAULT_REPS` in `app.js` is the single source of truth for the default.
 
-**Progressive-overload baseline.** `getLastSets(exerciseName, beforeDate)` searches all sessions (excluding today) for the most recent entry of a given exercise, so the logger screen can show "last time" numbers before the user enters today's sets. Any change to session/exercise shape needs to keep this lookup working.
+**Progressive-overload baseline.** `getLastSets(exerciseName, beforeDate)` searches all sessions strictly before `beforeDate` for the most recent entry of a given exercise, so the logger screen can show "last time" numbers before entering today's (or a past date's) sets. It's always called with `currentSessionDate`, so "last time" is always relative to whatever date you're currently logging, not real-world today.
 
 ## Code style
 

@@ -30,6 +30,7 @@ let data = loadData();
 // Transient state for whatever screen is currently open. None of this is
 // saved to storage until an exercise is marked "Done".
 let currentSplit = null;
+let currentSessionDate = null;
 let checkedExercises = new Set();
 let activeExerciseName = null;
 let activeSets = [];
@@ -64,7 +65,7 @@ function addExerciseToLibrary(split, name) {
 
 function getLastSets(exerciseName, beforeDate) {
   const matches = data.sessions
-    .filter((s) => s.date <= beforeDate || beforeDate === undefined)
+    .filter((s) => s.date < beforeDate)
     .flatMap((s) => s.exercises.filter((e) => e.name === exerciseName).map((e) => ({ date: s.date, sets: e.sets })));
   if (matches.length === 0) return null;
   matches.sort((a, b) => (a.date < b.date ? 1 : -1));
@@ -91,8 +92,10 @@ function showScreen(screen) {
 document.querySelectorAll(".split-btn").forEach((btn) => {
   btn.addEventListener("click", () => {
     currentSplit = btn.dataset.split;
-    checkedExercises = new Set();
+    currentSessionDate = todayISO();
+    document.getElementById("session-date-input").value = currentSessionDate;
     document.getElementById("workout-screen-title").textContent = `${currentSplit} Day`;
+    loadCheckedExercisesFromSession();
     renderChecklist();
     renderTodayPlan();
     showScreen(workoutScreen);
@@ -102,6 +105,21 @@ document.querySelectorAll(".split-btn").forEach((btn) => {
 document.getElementById("change-split-btn").addEventListener("click", () => {
   showScreen(splitSelectScreen);
 });
+
+document.getElementById("session-date-input").addEventListener("change", (e) => {
+  currentSessionDate = e.target.value;
+  loadCheckedExercisesFromSession();
+  renderChecklist();
+  renderTodayPlan();
+});
+
+// Whenever we land on a (date, split) pair, whatever was already saved for
+// it should show up checked and marked "Done" right away - not just
+// whatever you happened to have ticked earlier in this browser session.
+function loadCheckedExercisesFromSession() {
+  const session = findOrCreateSessionReadOnly();
+  checkedExercises = new Set(session ? session.exercises.map((e) => e.name) : []);
+}
 
 // ---------- Checklist + today's plan ----------
 function renderChecklist() {
@@ -142,7 +160,7 @@ function getSavedExercise(name) {
 }
 
 function findOrCreateSessionReadOnly() {
-  return data.sessions.find((s) => s.date === todayISO() && s.split === currentSplit) || null;
+  return data.sessions.find((s) => s.date === currentSessionDate && s.split === currentSplit) || null;
 }
 
 function renderTodayPlan() {
@@ -158,11 +176,38 @@ function renderTodayPlan() {
     const li = document.createElement("li");
     li.innerHTML = `
       <span>${name}</span>
-      <span class="plan-status ${saved ? "done" : ""}">${saved ? "Done" : "Not started"}</span>
+      <span class="plan-right">
+        <span class="plan-status ${saved ? "done" : ""}">${saved ? "Done" : "Not started"}</span>
+        ${saved ? '<button class="remove-set-btn delete-plan-btn" aria-label="Delete">&times;</button>' : ""}
+      </span>
     `;
     li.addEventListener("click", () => openLogger(name));
+    if (saved) {
+      li.querySelector(".delete-plan-btn").addEventListener("click", (e) => {
+        e.stopPropagation();
+        deleteExercise(name);
+      });
+    }
     list.appendChild(li);
   });
+}
+
+function deleteExercise(name) {
+  const confirmed = confirm(`Delete "${name}" from this session? This can't be undone.`);
+  if (!confirmed) return;
+
+  const session = findOrCreateSessionReadOnly();
+  if (!session) return;
+
+  session.exercises = session.exercises.filter((e) => e.name !== name);
+  if (session.exercises.length === 0) {
+    data.sessions = data.sessions.filter((s) => s !== session);
+  }
+
+  checkedExercises.delete(name);
+  saveData();
+  renderChecklist();
+  renderTodayPlan();
 }
 
 // ---------- Exercise logger ----------
@@ -178,7 +223,7 @@ function openLogger(name) {
 
   document.getElementById("logger-exercise-name").textContent = name;
 
-  const last = getLastSets(name, todayISOForLastLookup());
+  const last = getLastSets(name, currentSessionDate);
   const lastTimeEl = document.getElementById("logger-last-time");
   if (last) {
     lastTimeEl.textContent = `Last time (${last.date}): ${formatSets(last.sets)}`;
@@ -188,13 +233,6 @@ function openLogger(name) {
 
   renderSetList();
   showScreen(loggerScreen);
-}
-
-function todayISOForLastLookup() {
-  // Exclude today's own date so "last time" never shows today's in-progress sets.
-  const d = new Date(todayISO());
-  d.setDate(d.getDate() - 1);
-  return d.toISOString().slice(0, 10);
 }
 
 function renderSetList() {
@@ -247,7 +285,7 @@ document.getElementById("finish-exercise-btn").addEventListener("click", () => {
     return;
   }
 
-  const session = findOrCreateSession(todayISO(), currentSplit);
+  const session = findOrCreateSession(currentSessionDate, currentSplit);
   const existing = session.exercises.find((e) => e.name === activeExerciseName);
   if (existing) {
     existing.sets = cleanSets;

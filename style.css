@@ -105,6 +105,14 @@ body {
   height: 22px;
 }
 
+#session-date-input {
+  width: 100%;
+  padding: 10px;
+  font-size: 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
 .add-exercise-row {
   display: flex;
   gap: 8px;
@@ -145,6 +153,12 @@ body {
 
 .today-plan li:last-child {
   border-bottom: none;
+}
+
+.plan-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .plan-status {
