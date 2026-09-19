@@ -178,16 +178,20 @@ function renderTodayPlan() {
       <span>${name}</span>
       <span class="plan-right">
         <span class="plan-status ${saved ? "done" : ""}">${saved ? "Done" : "Not started"}</span>
-        ${saved ? '<button class="remove-set-btn delete-plan-btn" aria-label="Delete">&times;</button>' : ""}
+        <button class="remove-set-btn delete-plan-btn" aria-label="Remove">&times;</button>
       </span>
     `;
     li.addEventListener("click", () => openLogger(name));
-    if (saved) {
-      li.querySelector(".delete-plan-btn").addEventListener("click", (e) => {
-        e.stopPropagation();
+    li.querySelector(".delete-plan-btn").addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (saved) {
         deleteExercise(name);
-      });
-    }
+      } else {
+        checkedExercises.delete(name);
+        renderChecklist();
+        renderTodayPlan();
+      }
+    });
     list.appendChild(li);
   });
 }
