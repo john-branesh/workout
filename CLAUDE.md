@@ -22,7 +22,7 @@ To sanity-check `app.js` after edits (there is no linter configured):
 node --check app.js
 ```
 
-**Important: bump the cache-busting version whenever `app.js` or `style.css` changes.** `index.html` loads them as `app.js?v=4` and `style.css?v=4`. Browsers (phones especially) aggressively cache these files by URL, so without changing the `?v=` number, a device that already visited the app can keep silently running the old file after an update — this looks exactly like a bug ("I fixed X but it's not showing up") but is actually just a stale cache. Increment both numbers together any time either file changes.
+**Important: bump the cache-busting version whenever `app.js` or `style.css` changes.** `index.html` loads them as `app.js?v=5` and `style.css?v=5`. Browsers (phones especially) aggressively cache these files by URL, so without changing the `?v=` number, a device that already visited the app can keep silently running the old file after an update — this looks exactly like a bug ("I fixed X but it's not showing up") but is actually just a stale cache. Increment both numbers together any time either file changes.
 
 ## Architecture
 
@@ -59,7 +59,7 @@ node --check app.js
 
 ## Visual design
 
-Dark theme, defined as CSS custom properties at the top of `style.css` (`--bg`, `--card`, `--accent`, etc.) — change a color once there instead of hunting through every rule. Accent color is a coral/orange (`--accent`); "done" status and successful states use mint green (`--mint`); delete/remove controls use a red-pink (`--danger`). Each split button has a different colored top border (Push=coral, Pull=mint, Lower=yellow, Upper=blue) purely for quick visual recognition, no functional meaning. No external fonts or icon libraries — everything is the system font stack and plain CSS shapes, to keep the app dependency-free and fast even on a bad gym wifi connection.
+Dark **olive** theme (not neutral charcoal/black, and no blue or magenta — a deliberate choice), defined as CSS custom properties at the top of `style.css` (`--bg`, `--card`, `--accent`, etc.) — change a color once there instead of hunting through every rule. Accent color is a warm gold (`--accent`, used with `--on-accent` for text sitting on top of it, since gold is light enough to need a dark label rather than white); "done" status and successful states use a sage/lime green (`--success`); delete/remove controls use a rust red (`--danger`). Each split button has a different colored top border (Push=gold, Pull=sage, Lower=rust, Upper=tan) purely for quick visual recognition, no functional meaning. No external fonts or icon libraries — everything is the system font stack and plain CSS shapes, to keep the app dependency-free and fast even on a bad gym wifi connection.
 
 ## Code style
 
