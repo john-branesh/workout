@@ -129,16 +129,34 @@ function renderChecklist() {
     const li = document.createElement("li");
     const checkboxId = `chk-${name.replace(/\s+/g, "-")}`;
     li.innerHTML = `
-      <input type="checkbox" id="${checkboxId}" ${checkedExercises.has(name) ? "checked" : ""}>
-      <label for="${checkboxId}">${name}</label>
+      <span class="checklist-left">
+        <input type="checkbox" id="${checkboxId}" ${checkedExercises.has(name) ? "checked" : ""}>
+        <label for="${checkboxId}">${name}</label>
+      </span>
+      <button class="remove-set-btn remove-exercise-btn" aria-label="Remove from list">&times;</button>
     `;
     li.querySelector("input").addEventListener("change", (e) => {
       if (e.target.checked) checkedExercises.add(name);
       else checkedExercises.delete(name);
       renderTodayPlan();
     });
+    li.querySelector(".remove-exercise-btn").addEventListener("click", () => {
+      removeExerciseFromLibrary(name);
+    });
     list.appendChild(li);
   });
+}
+
+function removeExerciseFromLibrary(name) {
+  // Upper's checklist is a mix of Push + Pull + its own list, so we don't
+  // know which bucket this name actually came from - just try all of them.
+  SPLIT_GROUPS[currentSplit].forEach((group) => {
+    data.exerciseLibrary[group] = data.exerciseLibrary[group].filter((n) => n !== name);
+  });
+  checkedExercises.delete(name);
+  saveData();
+  renderChecklist();
+  renderTodayPlan();
 }
 
 document.getElementById("add-exercise-btn").addEventListener("click", () => {
