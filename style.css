@@ -90,7 +90,6 @@ body {
 .checklist li {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 10px;
   padding: 10px 4px;
   border-bottom: 1px solid #eee;
@@ -99,12 +98,6 @@ body {
 
 .checklist li:last-child {
   border-bottom: none;
-}
-
-.checklist-left {
-  display: flex;
-  align-items: center;
-  gap: 10px;
 }
 
 .checklist input[type="checkbox"] {
@@ -118,6 +111,32 @@ body {
   font-size: 15px;
   border: 1px solid #ccc;
   border-radius: 8px;
+}
+
+.manage-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.manage-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 4px;
+  border-bottom: 1px solid #eee;
+  font-size: 16px;
+}
+
+.manage-list li:last-child {
+  border-bottom: none;
+}
+
+.manage-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .add-exercise-row {

@@ -1,24 +1,22 @@
 const STORAGE_KEY = "workoutTrackerData";
 const DEFAULT_REPS = 10;
 
-// Upper day pulls its exercise list from Push + Pull history.
-// Push, Pull, and Lower only ever pull from themselves.
-const SPLIT_GROUPS = {
-  Push: ["Push"],
-  Pull: ["Pull"],
-  Lower: ["Lower"],
-  Upper: ["Push", "Pull", "Upper"],
-};
-
 function loadData() {
   const raw = localStorage.getItem(STORAGE_KEY);
   if (!raw) {
-    return {
-      exerciseLibrary: { Push: [], Pull: [], Lower: [], Upper: [] },
-      sessions: [],
-    };
+    return { exerciseLibrary: [], sessions: [] };
   }
-  return JSON.parse(raw);
+  const parsed = JSON.parse(raw);
+
+  // Older saved data kept a separate exercise list per split. Flatten it
+  // into one shared list so every exercise lives in exactly one place.
+  if (parsed.exerciseLibrary && !Array.isArray(parsed.exerciseLibrary)) {
+    const flat = new Set();
+    Object.values(parsed.exerciseLibrary).forEach((names) => names.forEach((n) => flat.add(n)));
+    parsed.exerciseLibrary = Array.from(flat);
+  }
+
+  return parsed;
 }
 
 function saveData() {
@@ -50,16 +48,13 @@ function findOrCreateSession(dateISO, split) {
   return session;
 }
 
-function getExerciseChecklist(split) {
-  const groups = SPLIT_GROUPS[split];
-  const names = new Set();
-  groups.forEach((g) => (data.exerciseLibrary[g] || []).forEach((n) => names.add(n)));
-  return Array.from(names).sort();
+function getExerciseChecklist() {
+  return [...data.exerciseLibrary].sort();
 }
 
-function addExerciseToLibrary(split, name) {
-  if (!data.exerciseLibrary[split].includes(name)) {
-    data.exerciseLibrary[split].push(name);
+function addExerciseToLibrary(name) {
+  if (!data.exerciseLibrary.includes(name)) {
+    data.exerciseLibrary.push(name);
   }
 }
 
@@ -82,10 +77,76 @@ function formatSets(sets) {
 const splitSelectScreen = document.getElementById("split-select-screen");
 const workoutScreen = document.getElementById("workout-screen");
 const loggerScreen = document.getElementById("logger-screen");
+const manageScreen = document.getElementById("manage-screen");
 
 function showScreen(screen) {
-  [splitSelectScreen, workoutScreen, loggerScreen].forEach((s) => s.classList.add("hidden"));
+  [splitSelectScreen, workoutScreen, loggerScreen, manageScreen].forEach((s) => s.classList.add("hidden"));
   screen.classList.remove("hidden");
+}
+
+// ---------- Manage exercises (view / rename / delete - kept off the
+// everyday selection screen so an accidental tap can't destroy anything) ----------
+document.getElementById("manage-exercises-btn").addEventListener("click", () => {
+  renderManageList();
+  showScreen(manageScreen);
+});
+
+document.getElementById("manage-back-btn").addEventListener("click", () => {
+  showScreen(splitSelectScreen);
+});
+
+function renderManageList() {
+  const list = document.getElementById("manage-list");
+  const emptyHint = document.getElementById("manage-empty");
+  list.innerHTML = "";
+
+  const names = getExerciseChecklist();
+  emptyHint.classList.toggle("hidden", names.length > 0);
+
+  names.forEach((name) => {
+    const li = document.createElement("li");
+    li.innerHTML = `
+      <span class="manage-name">${name}</span>
+      <span class="manage-actions">
+        <button class="link-btn rename-btn">Rename</button>
+        <button class="remove-set-btn delete-lib-btn" aria-label="Delete">&times;</button>
+      </span>
+    `;
+    li.querySelector(".rename-btn").addEventListener("click", () => renameExercise(name));
+    li.querySelector(".delete-lib-btn").addEventListener("click", () => deleteFromLibrary(name));
+    list.appendChild(li);
+  });
+}
+
+function renameExercise(oldName) {
+  const input = prompt("Rename exercise to:", oldName);
+  if (input === null) return;
+  const newName = input.trim();
+  if (!newName || newName === oldName) return;
+
+  // De-duped with a Set: renaming into a name that already exists just
+  // merges the two instead of creating a confusing duplicate entry.
+  data.exerciseLibrary = Array.from(new Set(data.exerciseLibrary.map((n) => (n === oldName ? newName : n))));
+
+  data.sessions.forEach((session) => {
+    session.exercises.forEach((exercise) => {
+      if (exercise.name === oldName) exercise.name = newName;
+    });
+  });
+
+  saveData();
+  renderManageList();
+}
+
+function deleteFromLibrary(name) {
+  const confirmed = confirm(
+    `Remove "${name}" from your exercise list? This won't touch any workouts you've already logged under this name, but it will stop showing up as an option to pick.`
+  );
+  if (!confirmed) return;
+
+  data.exerciseLibrary = data.exerciseLibrary.filter((n) => n !== name);
+  saveData();
+  renderManageList();
 }
 
 // ---------- Split select ----------
@@ -125,45 +186,27 @@ function loadCheckedExercisesFromSession() {
 function renderChecklist() {
   const list = document.getElementById("exercise-checklist");
   list.innerHTML = "";
-  getExerciseChecklist(currentSplit).forEach((name) => {
+  getExerciseChecklist().forEach((name) => {
     const li = document.createElement("li");
     const checkboxId = `chk-${name.replace(/\s+/g, "-")}`;
     li.innerHTML = `
-      <span class="checklist-left">
-        <input type="checkbox" id="${checkboxId}" ${checkedExercises.has(name) ? "checked" : ""}>
-        <label for="${checkboxId}">${name}</label>
-      </span>
-      <button class="remove-set-btn remove-exercise-btn" aria-label="Remove from list">&times;</button>
+      <input type="checkbox" id="${checkboxId}" ${checkedExercises.has(name) ? "checked" : ""}>
+      <label for="${checkboxId}">${name}</label>
     `;
     li.querySelector("input").addEventListener("change", (e) => {
       if (e.target.checked) checkedExercises.add(name);
       else checkedExercises.delete(name);
       renderTodayPlan();
     });
-    li.querySelector(".remove-exercise-btn").addEventListener("click", () => {
-      removeExerciseFromLibrary(name);
-    });
     list.appendChild(li);
   });
-}
-
-function removeExerciseFromLibrary(name) {
-  // Upper's checklist is a mix of Push + Pull + its own list, so we don't
-  // know which bucket this name actually came from - just try all of them.
-  SPLIT_GROUPS[currentSplit].forEach((group) => {
-    data.exerciseLibrary[group] = data.exerciseLibrary[group].filter((n) => n !== name);
-  });
-  checkedExercises.delete(name);
-  saveData();
-  renderChecklist();
-  renderTodayPlan();
 }
 
 document.getElementById("add-exercise-btn").addEventListener("click", () => {
   const input = document.getElementById("new-exercise-input");
   const name = input.value.trim();
   if (!name) return;
-  addExerciseToLibrary(currentSplit, name);
+  addExerciseToLibrary(name);
   checkedExercises.add(name);
   saveData();
   input.value = "";
@@ -320,7 +363,7 @@ document.getElementById("finish-exercise-btn").addEventListener("click", () => {
     });
   }
 
-  addExerciseToLibrary(currentSplit, activeExerciseName);
+  addExerciseToLibrary(activeExerciseName);
   saveData();
   renderTodayPlan();
   showScreen(workoutScreen);

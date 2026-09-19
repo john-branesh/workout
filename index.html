@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
 <title>Workout Tracker</title>
-<link rel="stylesheet" href="style.css?v=2">
+<link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
 
@@ -24,6 +24,7 @@
       <button class="split-btn" data-split="Lower">Lower</button>
       <button class="split-btn" data-split="Upper">Upper</button>
     </div>
+    <button id="manage-exercises-btn" class="link-btn">Manage exercises</button>
   </section>
 
   <!-- Screen 2: checklist of exercises + today's plan -->
@@ -53,6 +54,17 @@
     </div>
   </section>
 
+  <!-- Screen: view / rename / delete exercises - kept separate from the
+       everyday checklist so an accidental tap can't destroy anything -->
+  <section id="manage-screen" class="screen hidden">
+    <button id="manage-back-btn" class="link-btn">&larr; Back</button>
+    <h2>Manage Exercises</h2>
+    <div class="panel">
+      <ul id="manage-list" class="manage-list"></ul>
+      <p id="manage-empty" class="empty-hint">No exercises yet - add one from any split screen.</p>
+    </div>
+  </section>
+
   <!-- Screen 3: logging one exercise's sets -->
   <section id="logger-screen" class="screen hidden">
     <button id="logger-back-btn" class="link-btn">&larr; Back</button>
@@ -67,6 +79,6 @@
 
 </main>
 
-<script src="app.js?v=2"></script>
+<script src="app.js?v=3"></script>
 </body>
 </html>
