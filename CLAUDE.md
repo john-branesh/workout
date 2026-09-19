@@ -22,6 +22,8 @@ To sanity-check `app.js` after edits (there is no linter configured):
 node --check app.js
 ```
 
+**Important: bump the cache-busting version whenever `app.js` or `style.css` changes.** `index.html` loads them as `app.js?v=1` and `style.css?v=1`. Browsers (phones especially) aggressively cache these files by URL, so without changing the `?v=` number, a device that already visited the app can keep silently running the old file after an update — this looks exactly like a bug ("I fixed X but it's not showing up") but is actually just a stale cache. Increment both numbers together any time either file changes.
+
 ## Architecture
 
 **Three screens, one page.** `index.html` defines three `<section class="screen">` blocks (`split-select-screen`, `workout-screen`, `logger-screen`). `app.js`'s `showScreen()` toggles a `.hidden` class to switch between them — there is no router or framework, just direct DOM manipulation.

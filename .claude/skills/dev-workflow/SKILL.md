@@ -23,11 +23,15 @@ Follow this process for every piece of work in this repository, whether it's a n
 - After creating a file or making a substantial edit, explain it in plain English before moving on: what was built, which functions/methods were used and why, any data structures or algorithms (DSA) involved, and anything else genuinely worth learning from it.
 - Keep jargon to a minimum, and define any technical term you do use — teach it the way you'd explain it to someone new to programming, not the way you'd write it in a technical spec.
 
-## 4. Update CLAUDE.md
+## 4. Bump the cache-busting version if app.js or style.css changed
+
+- `index.html` loads these as `app.js?v=N` and `style.css?v=N`. If a change touches either file, increment both `?v=` numbers in `index.html`. Skipping this means the project owner's phone/browser can keep silently running the old file after an update, which looks exactly like a bug that wasn't actually fixed.
+
+## 5. Update CLAUDE.md
 
 - Before finishing, update CLAUDE.md so it reflects the current state of the codebase: new files, changed architecture, new commands, or anything that would help a future session (or the project owner) understand the project quickly.
 
-## 5. Stop and hand off — don't push or merge
+## 6. Stop and hand off — don't push or merge
 
 - When the branch's work is complete, tell the user it's ready.
 - Do not push or merge the branch. The user pushes and merges it themselves, unless they explicitly say to push/merge that specific branch. That approval doesn't carry over to future branches.
