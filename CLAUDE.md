@@ -22,7 +22,7 @@ To sanity-check `app.js` after edits (there is no linter configured):
 node --check app.js
 ```
 
-**Important: bump the cache-busting version whenever `app.js` or `style.css` changes.** `index.html` loads them as `app.js?v=3` and `style.css?v=3`. Browsers (phones especially) aggressively cache these files by URL, so without changing the `?v=` number, a device that already visited the app can keep silently running the old file after an update — this looks exactly like a bug ("I fixed X but it's not showing up") but is actually just a stale cache. Increment both numbers together any time either file changes.
+**Important: bump the cache-busting version whenever `app.js` or `style.css` changes.** `index.html` loads them as `app.js?v=4` and `style.css?v=4`. Browsers (phones especially) aggressively cache these files by URL, so without changing the `?v=` number, a device that already visited the app can keep silently running the old file after an update — this looks exactly like a bug ("I fixed X but it's not showing up") but is actually just a stale cache. Increment both numbers together any time either file changes.
 
 ## Architecture
 
@@ -56,6 +56,10 @@ node --check app.js
 **Reps default to 10.** Sets are stored as `{ weight, reps }`; a set is assumed to be a completed default-rep set unless a lower rep count is explicitly entered (matching how the user tracks failed reps by hand, e.g. `15(6)` meaning failed at 6). `formatSets()` renders sets back into that same shorthand. `DEFAULT_REPS` in `app.js` is the single source of truth for the default.
 
 **Progressive-overload baseline.** `getLastSets(exerciseName, beforeDate)` searches all sessions strictly before `beforeDate` for the most recent entry of a given exercise, so the logger screen can show "last time" numbers before entering today's (or a past date's) sets. It's always called with `currentSessionDate`, so "last time" is always relative to whatever date you're currently logging, not real-world today.
+
+## Visual design
+
+Dark theme, defined as CSS custom properties at the top of `style.css` (`--bg`, `--card`, `--accent`, etc.) — change a color once there instead of hunting through every rule. Accent color is a coral/orange (`--accent`); "done" status and successful states use mint green (`--mint`); delete/remove controls use a red-pink (`--danger`). Each split button has a different colored top border (Push=coral, Pull=mint, Lower=yellow, Upper=blue) purely for quick visual recognition, no functional meaning. No external fonts or icon libraries — everything is the system font stack and plain CSS shapes, to keep the app dependency-free and fast even on a bad gym wifi connection.
 
 ## Code style
 
